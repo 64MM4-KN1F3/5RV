@@ -1,0 +1,41 @@
+name: Mirror BOM Radar Image
+
+on:
+  schedule:
+    # Runs every 15 minutes
+    - cron: '*/15 * * * *'
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python (if using Python script)
+        if: ${{ !contains(github.ref, 'bom_radar_scraper.sh') }} # Only run if not using bash script
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Download image
+        run: |
+          # If using Python
+          python download_image.py
+          # If using Bash
+          # ./bom_radar_scraper.sh
+
+      - name: Check for changes
+        id: git_status
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add bom_radar.gif
+          git diff --staged --quiet || echo "::set-output name=changes_detected::true"
+
+      - name: Commit and push changes
+        if: steps.git_status.outputs.changes_detected == 'true'
+        run: |
+          git commit -m "Update radar image (automated)"
+          git push
