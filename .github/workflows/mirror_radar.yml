@@ -22,7 +22,7 @@ jobs:
       - name: Download image
         run: |
           # If using Python
-          python dbom_radar_scraper.py
+          python bom_radar_scraper.py
           # If using Bash
           # ./bom_radar_scraper.sh
 
