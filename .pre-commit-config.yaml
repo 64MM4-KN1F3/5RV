@@ -5,7 +5,6 @@ repos:
   hooks:
     - id: check-yaml
     - id: check-added-large-files
-      exclude: &exclude_venv .venv/.*|.git/.*
     - id: check-ast
     - id: check-json
     - id: check-merge-conflict
@@ -15,13 +14,4 @@ repos:
     hooks:
     -   id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
-        exclude: *exclude_venv
--   repo: local
-    hooks:
-    -   id: bom-radar-scraper
-        name: BOM Radar Scraper
-        entry: ./bom_radar_scraper.py
-        language: python
-        additional_dependencies: [requests]
-        stages: [pre-commit]
-        always_run: true
+        exclude: package.lock.json
