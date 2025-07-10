@@ -6,6 +6,9 @@ on:
     - cron: '*/15 * * * *'
   workflow_dispatch: # Allows manual triggering of the workflow
 
+permissions:
+  contents: write
+
 jobs:
   mirror:
     runs-on: ubuntu-latest
