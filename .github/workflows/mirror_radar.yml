@@ -29,12 +29,20 @@ jobs:
           # If using Bash
           # ./bom_radar_scraper.sh
 
+      - name: Filter image
+        run: |
+          # If using Python
+          uv run python filter_radar_image.py
+          # If using Bash
+          # ./filter_radar_image.py
+
       - name: Check for changes
         id: git_status
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
           git add bom_radar.gif
+          git add bom_radar_filtered.gif
           git diff --staged --quiet || echo "changes_detected=true" >> $GITHUB_OUTPUT
 
       - name: Commit and push changes
