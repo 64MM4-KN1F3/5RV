@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import sys
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
+from datetime import datetime
+import pytz
 
 def print_palette_section(title, indices, palette):
     """Prints a formatted section for a list of palette indices."""
@@ -33,7 +35,7 @@ def get_manual_key_indices(image, coordinates):
     print(f"--> Detected radar key colors at indices: {key_indices}")
     return key_indices
 
-def filter_image(input_path="bom_radar.gif", output_path="bom_radar_filtered.gif"):
+def filter_image(input_path="bom_radar.gif", output_path="bom_radar_filtered.gif", timestamp_path="timestamp.txt"):
     try:
         image = Image.open(input_path)
     except FileNotFoundError:
@@ -99,8 +101,64 @@ def filter_image(input_path="bom_radar.gif", output_path="bom_radar_filtered.gif
                     new_palette[index*3 : index*3+3] = new_color
     
     image.putpalette(new_palette)
+
+    # --- Add Text Overlays ---
+    draw = ImageDraw.Draw(image)
+    
+    # --- Load Timestamp and Convert to Melbourne Time ---
+    try:
+        with open(timestamp_path, "r") as f:
+            utc_timestamp_str = f.read().strip()
+        
+        # Parse the timestamp string (e.g., "Mon, 04 Aug 2025 08:44:07 GMT")
+        utc_dt = datetime.strptime(utc_timestamp_str, "%a, %d %b %Y %H:%M:%S %Z")
+        utc_dt = pytz.utc.localize(utc_dt)
+        
+        melbourne_tz = pytz.timezone('Australia/Melbourne')
+        melbourne_dt = utc_dt.astimezone(melbourne_tz)
+        
+        time_str = melbourne_dt.strftime("%-I:%M %p") # HH:MM AM/PM
+    except Exception as e:
+        print(f"Could not process timestamp: {e}. Using '??:?? ??'")
+        time_str = "??:?? ??"
+
+    # --- Define Font and Positions ---
+    try:
+        # Using a common system font. This may need adjustment based on the OS.
+        font = ImageFont.truetype("Arial.ttf", 24)
+    except IOError:
+        print("Arial font not found. Using default font.")
+        font = ImageFont.load_default()
+
+    # --- Draw Text ---
+    # Calculate positions for the text
+    image_width = image.width
+    
+    # Melbourne Label (Top Center)
+    melbourne_text = "Melbourne"
+    try:
+        # To center the text, we get its bounding box first
+        melbourne_bbox = draw.textbbox((0, 0), melbourne_text, font=font)
+        melbourne_width = melbourne_bbox[2] - melbourne_bbox[0]
+        melbourne_pos = ((image_width - melbourne_width) / 2, 3)
+    except AttributeError:
+        # Fallback for older Pillow versions
+        melbourne_width, _ = draw.textsize(melbourne_text, font=font)
+        melbourne_pos = ((image_width - melbourne_width) / 2, 3)
+
+    # Bottom Labels
+    left_label_pos = (150, 445)
+    time_pos = (355, 445)
+    right_label_pos = (590, 445)
+    
+    # Draw all text elements
+    draw.text(melbourne_pos, melbourne_text, fill=GS_WHITE, font=font)
+    draw.text(left_label_pos, "64km", fill=GS_WHITE, font=font)
+    draw.text(time_pos, time_str, fill=GS_WHITE, font=font)
+    draw.text(right_label_pos, "256km", fill=GS_WHITE, font=font)
+
     image.save(output_path)
-    print(f"\nSuccessfully created filtered image at '{output_path}'")
+    print(f"\nSuccessfully created filtered image with text at '{output_path}'")
 
 if __name__ == "__main__":
     filter_image()

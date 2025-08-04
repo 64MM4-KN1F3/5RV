@@ -10,6 +10,7 @@ def scrape_radar_gif(url, output_filename):
     print(f"Using Python interpreter: {sys.executable}")
     """
     Downloads the BOM radar GIF and saves it.
+    Returns a tuple (success, last_modified_timestamp).
     """
     try:
         headers = {
@@ -17,14 +18,15 @@ def scrape_radar_gif(url, output_filename):
         }
         response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()  # Raise an exception for bad status codes
+        last_modified = response.headers.get("Last-Modified")
         with open(output_filename, "wb") as f:
             f.write(response.content)
         print("Successfully saved image to " + output_filename)
-        return True
+        return True, last_modified
 
     except requests.exceptions.RequestException as e:
         print(f"Error copying image: {e}")
-        return False
+        return False, None
 
 def join_and_resize_images(image1_path, image2_path, output_path, target_width, target_height):
     try:
@@ -86,13 +88,24 @@ if __name__ == "__main__":
     radar_64_file = "bom_radar_64km.gif"
     radar_256_file = "bom_radar_256km.gif"
     output_file = "bom_radar.gif"
+    timestamp_file = "timestamp.txt"
 
     if not args.dev:
         radar_64_url = "http://www.bom.gov.au/radar/IDR024.gif"
         radar_256_url = "http://www.bom.gov.au/radar/IDR022.gif"
-        scrape_success = scrape_radar_gif(radar_64_url, radar_64_file) and scrape_radar_gif(radar_256_url, radar_256_file)
+        
+        scrape_64_success, last_modified_64 = scrape_radar_gif(radar_64_url, radar_64_file)
+        scrape_256_success, _ = scrape_radar_gif(radar_256_url, radar_256_file)
+        
+        scrape_success = scrape_64_success and scrape_256_success
+
         if not scrape_success:
             sys.exit(1)
+        
+        if last_modified_64:
+            with open(timestamp_file, "w") as f:
+                f.write(last_modified_64)
+            print(f"Timestamp '{last_modified_64}' saved to {timestamp_file}")
 
     join_success = join_and_resize_images(radar_64_file, radar_256_file, output_file, 800, 480)
     
