@@ -28,21 +28,33 @@ def scrape_radar_gif(url, output_filename):
         print(f"Error copying image: {e}")
         return False, None
 
-def join_and_resize_images(image1_path, image2_path, output_path, target_width, target_height):
+def join_and_resize_images(image1_path, image2_path, output_path, target_width, target_height, orientation='horizontal'):
     try:
         img1 = Image.open(image1_path).convert("RGBA")
         img2 = Image.open(image2_path).convert("RGBA")
 
-        # Create a new image with the combined width
-        total_width = img1.width + img2.width
-        max_height = max(img1.height, img2.height)
-        
-        # Create a new transparent image
-        new_img = Image.new('RGBA', (total_width, max_height), (0, 0, 0, 0))
-        
-        # Paste the two images side-by-side
-        new_img.paste(img1, (0, 0))
-        new_img.paste(img2, (img1.width, 0))
+        if orientation == 'vertical':
+            # Create a new image with the combined height
+            total_width = max(img1.width, img2.width)
+            total_height = img1.height + img2.height
+
+            # Create a new transparent image
+            new_img = Image.new('RGBA', (total_width, total_height), (0, 0, 0, 0))
+
+            # Paste the two images stacked vertically
+            new_img.paste(img1, (0, 0))
+            new_img.paste(img2, (0, img1.height))
+        else:
+            # Create a new image with the combined width
+            total_width = img1.width + img2.width
+            max_height = max(img1.height, img2.height)
+
+            # Create a new transparent image
+            new_img = Image.new('RGBA', (total_width, max_height), (0, 0, 0, 0))
+
+            # Paste the two images side-by-side
+            new_img.paste(img1, (0, 0))
+            new_img.paste(img2, (img1.width, 0))
 
         # --- Resize with aspect ratio preservation ---
         aspect_ratio = new_img.width / new_img.height
@@ -88,6 +100,7 @@ if __name__ == "__main__":
     radar_64_file = "bom_radar_64km.gif"
     radar_256_file = "bom_radar_256km.gif"
     output_file = "bom_radar.gif"
+    output_file_vertical = "bom_radar_vertical.gif"
     timestamp_file = "timestamp.txt"
 
     if not args.dev:
@@ -107,9 +120,10 @@ if __name__ == "__main__":
                 f.write(last_modified_64)
             print(f"Timestamp '{last_modified_64}' saved to {timestamp_file}")
 
-    join_success = join_and_resize_images(radar_64_file, radar_256_file, output_file, 800, 480)
+    join_success_horizontal = join_and_resize_images(radar_64_file, radar_256_file, output_file, 800, 480, orientation='horizontal')
+    join_success_vertical = join_and_resize_images(radar_64_file, radar_256_file, output_file_vertical, 480, 800, orientation='vertical')
     
-    if join_success:
+    if join_success_horizontal and join_success_vertical:
         sys.exit(0)
     else:
         sys.exit(1)
