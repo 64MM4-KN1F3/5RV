@@ -121,7 +121,7 @@ if __name__ == "__main__":
             print(f"Timestamp '{last_modified_64}' saved to {timestamp_file}")
 
     join_success_horizontal = join_and_resize_images(radar_64_file, radar_256_file, output_file, 800, 480, orientation='horizontal')
-    join_success_vertical = join_and_resize_images(radar_64_file, radar_256_file, output_file_vertical, 480, 800, orientation='vertical')
+    join_success_vertical = join_and_resize_images(radar_64_file, radar_256_file, output_file_vertical, 400, 800, orientation='vertical')
     
     if join_success_horizontal and join_success_vertical:
         sys.exit(0)
