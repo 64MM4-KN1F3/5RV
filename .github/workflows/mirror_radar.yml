@@ -36,12 +36,16 @@ jobs:
           # If using Bash
           # ./filter_radar_image.py
 
+      - name: Join animated radar
+        run: |
+          uv run bom_animated_radar_scraper.py -a vertical
+
       - name: Check for changes
         id: git_status
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
-          git add bom_radar.gif bom_radar_filtered.gif bom_radar_vertical.gif
+          git add bom_radar.gif bom_radar_filtered.gif bom_radar_vertical_animated.gif
           git diff --staged --quiet || echo "changes_detected=true" >> $GITHUB_OUTPUT
 
       - name: Commit and push changes
