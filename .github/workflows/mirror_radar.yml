@@ -41,7 +41,7 @@ jobs:
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
-          git add bom_radar.gif bom_radar_filtered.gif
+          git add bom_radar.gif bom_radar_filtered.gif bom_radar_vertical.gif
           git diff --staged --quiet || echo "changes_detected=true" >> $GITHUB_OUTPUT
 
       - name: Commit and push changes
